@@ -1,0 +1,126 @@
+#!/bin/bash
+#configure script that makes the library for the checkers client
+
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]
+then
+	echo "This configure script will generate the check.so library"
+	echo "to be used by the client.py python script."
+	echo "The following commands are available:"
+	echo "-h or --help"
+	echo -e "\tprint this help information"
+	echo
+	echo "-c or --clean"
+	echo -e "\tremove all generated files"
+	echo
+	echo "-m or --make"
+	echo -e "\tcompile check.cpp and check.h"
+	echo -e "\tthis is the default action if no arguments are given"
+	echo
+	echo "-t or --test"
+	echo -e "\ttest for package dependieces"
+	exit
+fi
+
+if [ "$1" == "--clean" ] || [ "$1" == "-c" ]
+then
+	echo "removing check.so"
+	rm check.so
+	echo "done"
+	exit
+fi
+
+if [ "$(uname)" == "Darwin" ];
+then
+	echo "cant install on Mac OSX at this point"
+	echo "try linux"
+	exit
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]
+then
+	if [ -f /etc/redhat-release ]
+	then
+		echo "no support for red hat at this moment"
+		exit
+	elif [ -f /etc/SuSE-release ]
+	then
+		echo "no support for SuSE at this moment"
+		exit
+	elif [ -f /etc/lsb-release ]
+	then
+		if [ "$1" == "--test" ] || [ "$1" == "-t" ] 
+		then
+			if [ $(dpkg-query -W -f='${Status}' python-tk 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package python-tk is not installed"
+				echo "this package is required to display the gui"
+				echo "to install: sudo apt-get install python-tk"
+				exit
+			fi
+			if [ $(dpkg-query -W -f='${Status}' libboost-python-dev 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package libboost-python-dev is not installed"
+				echo "this package is required to make the python library"
+				echo "to install: sudo apt-get install libboost-python-dev"
+				exit
+			fi
+			if [ $(dpkg-query -W -f='${Status}' libboost-all-dev 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package libboost-all-dev is not installed"
+				echo "this package is required to make the python library"
+				echo "to install: sudo apt-get install libboost-all-dev"
+				exit
+			fi
+			if [ $(dpkg-query -W -f='${Status}' g++-4.8 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package g++-4.8 is not installed"
+				echo "this package is required to make the python library"
+				echo "to install: sudo apt-get install g++-4.8"
+				exit
+			fi
+			echo "All Required Packages are installed"
+			exit
+		fi
+	
+		if [ "$1" == "--make" ] || [ "$1" == "-m" ] || [ "$#" -eq 0 ] 
+		then
+			if [ $(dpkg-query -W -f='${Status}' python-tk 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package python-tk is not installed"
+				echo "this package is required to display the gui"
+				echo "to install: sudo apt-get install python-tk"
+				exit
+			fi
+			if [ $(dpkg-query -W -f='${Status}' libboost-python-dev 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package libboost-python-dev is not installed"
+				echo "this package is required to make the python library"
+				echo "to install: sudo apt-get install libboost-python-dev"
+				exit
+			fi
+			if [ $(dpkg-query -W -f='${Status}' libboost-all-dev 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package libboost-all-dev is not installed"
+				echo "this package is required to make the python library"
+				echo "to install: sudo apt-get install libboost-all-dev"
+				exit
+			fi
+			if [ $(dpkg-query -W -f='${Status}' g++-4.8 2>/dev/null | grep -c "ok installed") -eq 0 ];
+			then
+				echo "the package g++-4.8 is not installed"
+				echo "this package is required to make the python library"
+				echo "to install: sudo apt-get install g++-4.8"
+				exit
+			fi
+			echo "Building check.so"
+			g++-4.8 -std=c++11 -fno-strict-aliasing -DNDEBUG -g -fwrapv -Wall -O3 -fPIC -I/usr/include/python2.7 -c check.cpp -o check.o 
+			g++-4.8 -std=c++11 -pthread -shared -Wl,-O3 -Wl,-Bsymbolic-functions -Wl,-Bsymbolic-functions -Wl,-z,relro -O3 check.o -lboost_python -o check.so
+			rm -rf check.o
+			echo "Done"
+			exit
+		fi
+	fi
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]
+then
+	echo "cant install on Windows at this point"
+	echo "try linux"
+	exit
+fi
